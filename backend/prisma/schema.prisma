@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  deviceId    String    @unique
+  coins       Int       @default(0)
+  ownedScenes String[]  @default([])
+  activeScene String    @default("default")
+  sessions    Session[]
+  createdAt   DateTime  @default(now())
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  score         Int
+  total         Int      @default(20)
+  coinsEarned   Int
+  typeBreakdown Json
+  createdAt     DateTime @default(now())
+}

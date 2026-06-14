@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>漢字チャレンジ！ — 小学3年生向け漢字学習アプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: 優しい丸みのある日本語フォントをインポート -->
+  <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Yusei+Magic&family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* 全体的に丸みを帯びたフォントを設定 */
+    body {
+      background: #EBF1F6;
+      font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* スマホ実機を模した高級感あるフレーム */
+    .phone-frame {
+      width: 100%;
+      max-width: 412px;
+      height: 100vh;
+      max-height: 892px;
+      background: #FAFBFD;
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(100, 116, 139, 0.15), 0 0 0 12px #FFFFFF, 0 0 0 14px #E2E8F0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-height: 750px) {
+      .phone-frame {
+        border-radius: 0;
+        max-height: 100vh;
+        box-shadow: none;
+      }
+    }
+
+    /* ぷっくり立体感のある「おもちゃライク」な3Dボタンスタイル */
+    .btn-3d {
+      position: relative;
+      transition: all 0.1s ease;
+      top: 0;
+    }
+    .btn-3d:active {
+      top: 4px;
+      filter: brightness(0.95);
+    }
+    
+    .btn-3d-yellow {
+      background: #FFD23F;
+      border-bottom: 5px solid #E2A600;
+      color: #3B2000;
+    }
+    .btn-3d-yellow:active {
+      border-bottom-width: 1px;
+    }
+
+    .btn-3d-white {
+      background: #FFFFFF;
+      border: 2px solid #E2E8F0;
+      border-bottom: 5px solid #CBD5E1;
+      color: #475569;
+    }
+    .btn-3d-white:active {
+      border-bottom-width: 1px;
+    }
+
+    .btn-3d-indigo {
+      background: #6366F1;
+      border-bottom: 5px solid #4338CA;
+      color: #FFFFFF;
+    }
+    .btn-3d-indigo:active {
+      border-bottom-width: 1px;
+    }
+
+    /* ふわっと丸い吹き出し */
+    .bubble {
+      position: relative;
+      background: #FFFFFF;
+      border: 3px solid #E0E7FF;
+      border-radius: 24px;
+      padding: 16px;
+    }
+    .bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -16px;
+      left: 40px;
+      border: 8px solid transparent;
+      border-top-color: #FFFFFF;
+      z-index: 2;
+    }
+    .bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -21px;
+      left: 38px;
+      border: 10px solid transparent;
+      border-top-color: #E0E7FF;
+      z-index: 1;
+    }
+
+    /* 雲や星のふわふわアニメーション */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+    .float-item {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-gentle {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .pulse-gentle {
+      animation: pulse-gentle 2s ease-in-out infinite;
+    }
+
+    /* 正解・不正解時の気持ちいいアニメーション */
+    @keyframes scaleUp {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-in {
+      animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* おうち、せいせき、ショップのテーマに合わせた背景スタイル */
+    .theme-default {
+      background: radial-gradient(circle at 50% 30%, #F5F9FC 0%, #EBF3F9 100%);
+    }
+    .theme-beach {
+      background: radial-gradient(circle at 50% 30%, #E0F2FE 0%, #BAE6FD 100%);
+    }
+    .theme-forest {
+      background: radial-gradient(circle at 50% 30%, #F0FDF4 0%, #DCFCE7 100%);
+    }
+    .theme-mountain {
+      background: radial-gradient(circle at 50% 30%, #F1F5F9 0%, #E2E8F0 100%);
+    }
+    .theme-space {
+      background: radial-gradient(circle at 50% 30%, #1E1B4B 0%, #0F172A 100%);
+    }
+    .theme-castle {
+      background: radial-gradient(circle at 50% 30%, #FAF5FF 0%, #F3E8FF 100%);
+    }
+  </style>
+</head>
+<body class="flex justify-center items-center min-height-screen p-0 sm:p-6">
+
+  <!-- メインスマホフレーム -->
+  <div class="phone-frame theme-default transition-all duration-500" id="mainFrame">
+
+    <!-- ==================== TOP BAR (ステータス & コイン) ==================== -->
+    <div class="flex justify-between items-center px-6 pt-5 pb-3 z-10">
+      <!-- アプリロゴ（ホーム遷移） -->
+      <div onclick="showScreen('home')" class="cursor-pointer flex items-center gap-1.5 active:scale-95 transition-transform">
+        <span class="text-2xl">✏️</span>
+        <span class="font-black text-gray-700 tracking-wider text-base" id="headerTitle">漢字チャレンジ</span>
+      </div>
+
+      <!-- コインディスプレイ (ぷっくり丸くて愛らしいデザイン) -->
+      <div class="flex items-center gap-1.5 bg-white border-2 border-slate-100 rounded-full py-1 pl-2 pr-3.5 shadow-sm active:scale-95 transition-all">
+        <span class="text-xl pulse-gentle">🪙</span>
+        <span class="text-slate-800 font-extrabold text-sm tracking-wide" id="globalCoin">120</span>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN 1: ホーム ==================== -->
+    <div id="screen-home" class="screen flex-1 flex flex-col justify-between px-6 pb-6 overflow-y-auto">
+      <!-- ヒーローエリア -->
+      <div class="flex flex-col items-center justify-center pt-8 pb-4 flex-1">
+        <!-- 雲のふわふわ装飾（子供っぽすぎず、すっきりお洒落に） -->
+        <div class="relative w-full flex justify-center mb-4">
+          <span class="absolute text-5xl opacity-20 left-6 top-0 float-item" style="animation-delay: 0.5s;">☁️</span>
+          <span class="absolute text-4xl opacity-10 right-10 top-4 float-item" style="animation-delay: 1.5s;">☁️</span>
+          
+          <!-- マスコット：ひよこのルビ先生 🐥 -->
+          <div class="relative z-10 w-28 h-28 bg-white/80 backdrop-blur rounded-[36px] border-4 border-amber-200 flex items-center justify-center shadow-lg shadow-indigo-100/50 float-item">
+            <span class="text-6xl">🐣</span>
+            <div class="absolute -bottom-2 -right-2 bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full border-2 border-white">
+              ルビ先生
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-2">
+          <h1 class="text-slate-800 text-3xl font-black tracking-tight" style="line-height: 1.3;">
+            <ruby>漢字<rt class="text-[10px] text-indigo-400">かんじ</rt></ruby>チャレンジ！
+          </h1>
+          <p class="text-slate-500 text-xs font-medium mt-1">小学3年生の200字をマスターしよう！</p>
+        </div>
+      </div>
+
+      <!-- メインのアクションエリア -->
+      <div class="space-y-4">
+        <!-- 巨大なあそぶボタン -->
+        <button onclick="startQuiz()" class="btn-3d btn-3d-yellow w-full rounded-[24px] py-4 px-6 flex items-center justify-center gap-3 shadow-lg shadow-amber-200/50">
+          <span class="text-2xl">🚀</span>
+          <span class="text-xl font-black tracking-wider">あそぶ（20問）</span>
+        </button>
+
+        <!-- サブメニューボタン2列 -->
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="showScreen('history')" class="btn-3d btn-3d-white rounded-[20px] py-3.5 flex flex-col items-center justify-center gap-1 shadow-sm">
+            <span class="text-xl">📊</span>
+            <span class="text-sm font-bold text-slate-700">せいせき</span>
+          </button>
+          <button onclick="showScreen('shop')" class="btn-3d btn-3d-white rounded-[20px] py-3.5 flex flex-col items-center justify-center gap-1 shadow-sm">
+            <span class="text-xl">🏪</span>
+            <span class="text-sm font-bold text-slate-700">ショップ</span>
+          </button>
+        </div>
+
+        <!-- 本日のミニ情報・進捗 -->
+        <div class="bg-white/80 border border-slate-100 rounded-[24px] p-4 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🎯</span>
+            <div>
+              <div class="text-xs text-slate-400 font-bold">今日の目標</div>
+              <div class="text-sm font-bold text-slate-700">あと1回クイズを解こう！</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded-full">Lv.3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== SCREEN 2: クイズ ==================== -->
+    <div id="screen-quiz" class="screen flex-1 flex flex-col justify-between px-6 pb-6 overflow-y-auto hidden">
+      <!-- 進捗ヘッダー -->
+      <div class="pt-2">
+        <div class="flex justify-between items-center mb-1.5">
+          <span class="text-slate-400 text-xs font-bold" id="quizProgressText">問題 1 / 20</span>
+          <span class="text-indigo-600 text-xs font-black bg-indigo-50 px-2 py-0.5 rounded-full" id="quizTypeBadge">よみかた</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+          <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" id="quizProgressBar" style="width: 5%;"></div>
+        </div>
+      </div>
+
+      <!-- 問題表示エリア (余白をしっかりとって綺麗に) -->
+      <div class="my-auto py-4">
+        <div class="bg-white border-2 border-slate-100 rounded-[32px] p-6 shadow-sm relative">
+          <!-- ルビ先生のヒント吹き出しボタン -->
+          <button onclick="toggleHint()" class="absolute -top-3 right-6 bg-amber-100 hover:bg-amber-200 border-2 border-amber-200 text-amber-800 text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1">
+            <span>💡</span> ヒント
+          </button>
+          
+          <div class="text-slate-400 text-xs font-bold mb-3 tracking-wide">もんだい</div>
+          <!-- 問題文 -->
+          <div class="text-slate-800 text-xl font-bold leading-relaxed mb-1" id="quizQuestion">
+            「学」の読み方はどれかな？
+          </div>
+
+          <!-- ヒント文（非表示が初期値） -->
+          <div id="quizHintContainer" class="hidden mt-3 p-3 bg-amber-50 rounded-2xl border border-amber-100 text-xs text-amber-800 flex items-start gap-1.5">
+            <span>💡</span> <span id="quizHintText">学校にいくよ。</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4択ボタンエリア -->
+      <div class="space-y-3" id="choicesContainer">
+        <!-- JSで動的にボタン生成 -->
+      </div>
+
+      <!-- 解説・フィードバックパネル (正誤判定後にスライドアップ) -->
+      <div id="feedbackPanel" class="hidden fixed bottom-0 left-0 right-0 p-6 bg-white border-t-4 border-slate-100 rounded-t-[36px] shadow-2xl z-20" style="max-width: 412px; margin: 0 auto;">
+        <div class="flex items-center gap-3 mb-2">
+          <span id="feedbackIcon" class="text-3xl">🎉</span>
+          <h4 id="feedbackTitle" class="text-lg font-black text-emerald-600">せいかい！</h4>
+          <span id="feedbackCoins" class="ml-auto text-amber-500 font-black text-sm bg-amber-50 px-3 py-1 rounded-full">+10 🪙</span>
+        </div>
+        <p id="feedbackText" class="text-slate-600 text-sm leading-relaxed mb-4">
+          「学」は「まな（ぶ）」とも読むよ！よくできたね！
+        </p>
+        <button onclick="nextQuestion()" class="btn-3d btn-3d-indigo w-full rounded-2xl py-3 text-sm font-bold tracking-wider">
+          つぎへすすむ →
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ==================== SCREEN 3: 結果 ==================== -->
+    <div id="screen-result" class="screen flex-1 flex flex-col justify-between px-6 pb-6 overflow-y-auto hidden">
+      <div class="flex flex-col items-center pt-6 pb-4 flex-1 justify-center">
+        <!-- 3つ星アニメーション -->
+        <div class="flex gap-1 mb-3" id="starsContainer">
+          <span class="text-4xl">⭐</span>
+          <span class="text-5xl -translate-y-2">⭐</span>
+          <span class="text-4xl">⭐</span>
+        </div>
+
+        <div class="text-center mb-1">
+          <span class="text-xs text-slate-400 font-extrabold tracking-widest uppercase">RESULT</span>
+          <h2 class="text-slate-800 text-2xl font-black">よくがんばったね！</h2>
+        </div>
+
+        <!-- スコアディスプレイ -->
+        <div class="bg-white border-2 border-indigo-50/50 rounded-[32px] px-8 py-5 text-center shadow-lg shadow-indigo-100/30 my-4 relative overflow-hidden w-full max-w-[280px]">
+          <div class="text-slate-400 text-xs font-bold mb-1">せいかいすう</div>
+          <div class="flex justify-center items-baseline gap-1">
+            <span class="text-slate-800 font-black text-5xl" id="resultScore">18</span>
+            <span class="text-slate-400 font-bold text-lg">/ 20</span>
+          </div>
+          <div class="mt-2 text-xs bg-indigo-50 text-indigo-600 font-black py-1 px-3 rounded-full inline-block" id="resultPercentage">
+            正答率 90%
+          </div>
+        </div>
+
+        <!-- 獲得コイン -->
+        <div class="flex items-center gap-2 bg-amber-50 border-2 border-amber-200 rounded-full py-1.5 px-4 mb-4">
+          <span class="text-xl">🪙</span>
+          <span class="text-amber-700 font-black text-sm" id="resultCoinsText">合計 +200 コイン ゲット！</span>
+        </div>
+
+        <!-- AI先生からのやさしいアドバイス -->
+        <div class="w-full">
+          <div class="flex items-center gap-2 mb-2 ml-2">
+            <span class="text-2xl">🐥</span>
+            <span class="text-slate-400 text-xs font-bold">ルビ先生のアドバイス</span>
+          </div>
+          <div class="bubble text-xs text-slate-600 leading-relaxed font-medium" id="resultAdvice">
+            すごい！満点にとても近いよ。「部首」の問題が少し難しかったみたい。「さんずい」は水に関する漢字につくよ。明日も一緒にチャレンジしよう！
+          </div>
+        </div>
+      </div>
+
+      <!-- アクションボタン -->
+      <div class="space-y-3">
+        <button onclick="startQuiz()" class="btn-3d btn-3d-yellow w-full rounded-2xl py-3.5 text-base font-bold tracking-wider">
+          🔁 もういちどあそぶ
+        </button>
+        <button onclick="showScreen('home')" class="btn-3d btn-3d-white w-full rounded-2xl py-3.5 text-base font-bold tracking-wider">
+          🏠 ホームにもどる
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ==================== SCREEN 4: 成績履歴 ==================== -->
+    <div id="screen-history" class="screen flex-1 flex flex-col justify-between px-6 pb-20 overflow-y-auto hidden">
+      <div class="pt-2 space-y-5">
+        <div class="flex items-center gap-2">
+          <button onclick="showScreen('home')" class="text-slate-400 text-lg">←</button>
+          <h2 class="text-slate-800 text-xl font-black">学習のきろく</h2>
+        </div>
+
+        <!-- 7日間のスコア推移（マイルドで洗練された棒グラフ） -->
+        <div class="bg-white border border-slate-100 rounded-[28px] p-5 shadow-sm">
+          <div class="text-slate-400 text-xs font-bold mb-4">ここ最近のせいせき</div>
+          <div class="flex items-end justify-between gap-2 h-24 pt-2">
+            <!-- バーA -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative group" style="height: 60%;">
+                <div class="bg-indigo-300 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-slate-400 text-[10px] font-bold">月</span>
+            </div>
+            <!-- バーB -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 45%;">
+                <div class="bg-indigo-300 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-slate-400 text-[10px] font-bold">火</span>
+            </div>
+            <!-- バーC -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 80%;">
+                <div class="bg-indigo-300 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-slate-400 text-[10px] font-bold">水</span>
+            </div>
+            <!-- バーD -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 90%;">
+                <div class="bg-indigo-300 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-slate-400 text-[10px] font-bold">木</span>
+            </div>
+            <!-- バーE -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 70%;">
+                <div class="bg-indigo-400 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-slate-400 text-[10px] font-bold">金</span>
+            </div>
+            <!-- バーF -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 55%;">
+                <div class="bg-indigo-400 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-slate-400 text-[10px] font-bold">土</span>
+            </div>
+            <!-- バーG (今日) -->
+            <div class="flex flex-col items-center gap-1.5 flex-1">
+              <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 95%;">
+                <div class="bg-amber-400 w-full rounded-t-lg absolute bottom-0 h-full"></div>
+              </div>
+              <span class="text-amber-500 text-[10px] font-bold">今日</span>
+            </div>
+          </div>
+          
+          <!-- 昨日比コメント -->
+          <div class="mt-4 bg-emerald-50 rounded-2xl p-3 flex items-center gap-2">
+            <span class="text-xl">📈</span>
+            <span class="text-emerald-800 text-xs font-bold leading-relaxed">
+              昨日の自分をこえたよ！毎日つづけてえらい！
+            </span>
+          </div>
+        </div>
+
+        <!-- タイプ別得意・苦手（美しく整理された進捗バー） -->
+        <div class="bg-white border border-slate-100 rounded-[28px] p-5 shadow-sm">
+          <div class="text-slate-400 text-xs font-bold mb-3">タイプ別のせいとうりつ</div>
+          <div class="space-y-3.5">
+            <!-- 読み -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-bold mb-1">
+                <span class="text-slate-600">📖 読みかた</span>
+                <span class="text-indigo-600 font-extrabold">92%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="bg-indigo-400 h-full rounded-full" style="width: 92%;"></div>
+              </div>
+            </div>
+            <!-- 空欄 -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-bold mb-1">
+                <span class="text-slate-600">📝 あてはまる漢字</span>
+                <span class="text-indigo-600 font-extrabold">78%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="bg-indigo-400 h-full rounded-full" style="width: 78%;"></div>
+              </div>
+            </div>
+            <!-- 送り仮名 -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-bold mb-1">
+                <span class="text-slate-600">✍️ 送り仮名</span>
+                <span class="text-amber-500 font-extrabold">65%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="bg-amber-400 h-full rounded-full" style="width: 65%;"></div>
+              </div>
+            </div>
+            <!-- にた漢字 -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-bold mb-1">
+                <span class="text-slate-600">🔍 にた漢字</span>
+                <span class="text-indigo-600 font-extrabold">85%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="bg-indigo-400 h-full rounded-full" style="width: 85%;"></div>
+              </div>
+            </div>
+            <!-- 部首 -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-bold mb-1">
+                <span class="text-slate-600">🏛️ 部首(ぶしゅ)</span>
+                <span class="text-rose-500 font-extrabold">52%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="bg-rose-400 h-full rounded-full" style="width: 52%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== SCREEN 5: ショップ ==================== -->
+    <div id="screen-shop" class="screen flex-1 flex flex-col justify-between px-6 pb-20 overflow-y-auto hidden">
+      <div class="pt-2 space-y-4">
+        <div class="flex items-center gap-2">
+          <button onclick="showScreen('home')" class="text-slate-400 text-lg">←</button>
+          <h2 class="text-slate-800 text-xl font-black">背景ショップ</h2>
+        </div>
+        <p class="text-slate-400 text-xs font-medium">貯めたコインでホーム画面を着せ替えよう！</p>
+
+        <!-- 現在の背景表示 -->
+        <div class="bg-white border border-slate-100 rounded-[28px] p-4 shadow-sm">
+          <div class="text-slate-400 text-xs font-bold mb-2">使っているテーマ</div>
+          <div class="h-20 rounded-2xl flex items-center justify-center text-3xl font-bold text-slate-700 shadow-inner" id="currentThemePreview" style="background: radial-gradient(circle, #F5F9FC 0%, #EBF3F9 100%);">
+            🏠 ふつうの空
+          </div>
+        </div>
+
+        <!-- 商品リスト -->
+        <div class="grid grid-cols-2 gap-3" id="shopItemsContainer">
+          <!-- JSで動的に構築（beach, forest, mountain, space, castle） -->
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== BOTTOM TAB NAVIGATION (美しく丸みのあるドック型) ==================== -->
+    <div class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-100 rounded-[24px] shadow-lg flex justify-around items-center py-2 z-10 transition-transform duration-300" id="bottomNav">
+      <button onclick="showScreen('home')" class="flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all" id="tab-home">
+        <span class="text-xl">🏠</span>
+        <span class="text-[10px] font-bold text-slate-500">ホーム</span>
+      </button>
+      <button onclick="showScreen('history')" class="flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all" id="tab-history">
+        <span class="text-xl">📊</span>
+        <span class="text-[10px] font-bold text-slate-500">せいせき</span>
+      </button>
+      <button onclick="showScreen('shop')" class="flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all" id="tab-shop">
+        <span class="text-xl">🏪</span>
+        <span class="text-[10px] font-bold text-slate-500">ショップ</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- インタラクティブな動きを支えるJavaScript -->
+  <script>
+    // --- 擬似状態データベース ---
+    const state = {
+      coins: 340,
+      activeTheme: 'default',
+      ownedThemes: ['default'],
+      currentQuestionIndex: 0,
+      correctCount: 0,
+      quizAnswers: [], // ユーザーの各問への成否
+      quizQuestions: [] // 現在のクイズセッションで使っている問題リスト
+    };
+
+    // --- 背景テーマデータ ---
+    const themes = {
+      default: { name: 'ふつうの空', emoji: '🏠', class: 'theme-default', price: 0 },
+      beach: { name: '夏のビーチ', emoji: '🏖️', class: 'theme-beach', price: 50 },
+      forest: { name: '秋の森', emoji: '🍁', class: 'theme-forest', price: 80 },
+      mountain: { name: '雪山', emoji: '🏔️', class: 'theme-mountain', price: 120 },
+      space: { name: '宇宙', emoji: '🌌', class: 'theme-space', price: 200 },
+      castle: { name: 'お城', emoji: '🏰', class: 'theme-castle', price: 300 }
+    };
+
+    // --- クイズマスターデータ (小学3年生用・バラエティ豊かに用意) ---
+    const questionsDatabase = [
+      {
+        type: 'reading',
+        question: '「<ruby>学<rt>がく</rt>校<rt>こう</rt></ruby>」の「学」の<ruby>訓読<rt>くんよ</rt></ruby>みはどれかな？',
+        choices: ['まなぶ', 'おそわる', 'きく', 'おぼえる'],
+        answer: 0,
+        hint: '自分から勉強を「まなぶ」というよ。',
+        explanation: '「学」の音読みは「ガク」、訓読みは「まなぶ」だよ！'
+      },
+      {
+        type: 'similar',
+        question: '「すえ（一番おわり）」と読む漢字はどれかな？',
+        choices: ['末', '未', '木', '本'],
+        answer: 0,
+        hint: '一番上の横棒が「長い」ほうだよ！',
+        explanation: '「末（すえ）」は横の棒が上が長くて、「未（いま・だ）」は上が短いの。気をつけてね！'
+      },
+      {
+        type: 'fill',
+        question: '「あかるい___」に入る漢字はどれかな？',
+        choices: ['声', '星', '風', '晴'],
+        answer: 0,
+        hint: '口からだす音だよ。',
+        explanation: '「あかるい声（こえ）」がせいかい！耳に届く元気な声だね。'
+      },
+      {
+        type: 'okurigana',
+        question: '「走」のただしい送り仮名はどれかな？',
+        choices: ['走る', '走ける', '走く', '走れ'],
+        answer: 0,
+        hint: '「はし・る」だね。',
+        explanation: '「走る」がせいかい！「る」が外にでるよ。'
+      },
+      {
+        type: 'bushu',
+        question: '「さんずい（水にかんけいする）」はどれかな？',
+        choices: ['氵', '冫', '彡', 'シ'],
+        answer: 0,
+        hint: '池（いけ）や海（うみ）の左側についているよ。',
+        explanation: '「氵」がさんずいだよ！水に関係する漢字（泳、池、海など）に使うんだ。'
+      },
+      {
+        type: 'reading',
+        question: '「<ruby>鉄<rt>てつ</rt></ruby>」の読み方はどれかな？',
+        choices: ['てつ', 'くろがね', 'どう', 'はがね'],
+        answer: 0,
+        hint: '新幹線や電車が走る線路（レール）は何でできているかな？',
+        explanation: '「鉄」は「てつ」と読むよ。鉄道や鉄棒（てつぼう）の「てつ」だね。'
+      },
+      {
+        type: 'similar',
+        question: '「みどり」と読むただしい漢字はどれかな？',
+        choices: ['緑', '縁', '線', '録'],
+        answer: 0,
+        hint: '糸（いとへん）に「彔」という字をかくよ。',
+        explanation: '「緑（みどり）」がせいかい！お友達の「線（せん）」や「録（ろく）」と間違えないようにしよう。'
+      },
+      {
+        type: 'bushu',
+        question: '「きへん（木にかんけいする）」はどれかな？',
+        choices: ['木', '扌', '亻', '氵'],
+        answer: 0,
+        hint: '森（もり）や林（はやし）、机（つくえ）につく部首だよ。',
+        explanation: '漢字の左側につく「木（きへん）」だよ！机や校など、木で作られたものに使われるよ。'
+      }
+    ];
+
+    // --- 画面切り替え ---
+    function showScreen(screenId) {
+      // 全画面を非表示に
+      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+      
+      // 対象画面を表示
+      const targetScreen = document.getElementById(`screen-${screenId}`);
+      if (targetScreen) targetScreen.classList.remove('hidden');
+
+      // ナビゲーションバーの制御（クイズや結果画面では非表示にしてゲームに集中させる）
+      const nav = document.getElementById('bottomNav');
+      if (screenId === 'quiz' || screenId === 'result') {
+        nav.classList.add('translate-y-28');
+      } else {
+        nav.classList.remove('translate-y-0', 'translate-y-28');
+      }
+
+      // タブアクティブ状態の変更
+      document.querySelectorAll('#bottomNav button').forEach(b => b.classList.remove('bg-indigo-50', 'text-indigo-600'));
+      const activeTab = document.getElementById(`tab-${screenId}`);
+      if (activeTab) {
+        activeTab.classList.add('bg-indigo-50', 'text-indigo-600');
+        const span = activeTab.querySelector('span:last-child');
+        if (span) span.className = 'text-[10px] font-black text-indigo-600';
+      }
+
+      // ヘッダータイトルの制御
+      const headerTitle = document.getElementById('headerTitle');
+      if (screenId === 'home') {
+        headerTitle.innerText = "漢字チャレンジ";
+      } else if (screenId === 'history') {
+        headerTitle.innerText = "せいせき履歴";
+      } else if (screenId === 'shop') {
+        headerTitle.innerText = "背景ショップ";
+      }
+
+      // ショップ画面ならリストを再描画
+      if (screenId === 'shop') {
+        renderShop();
+      }
+    }
+
+    // --- コイン表示の更新 ---
+    function updateCoinDisplay() {
+      document.getElementById('globalCoin').innerText = state.coins;
+    }
+
+    // --- クイズ開始 ---
+    function startQuiz() {
+      state.currentQuestionIndex = 0;
+      state.correctCount = 0;
+      state.quizAnswers = [];
+      
+      // 問題リストをシャッフル、または毎回ちょっと違う並びにする
+      state.quizQuestions = [...questionsDatabase].sort(() => Math.random() - 0.5).slice(0, 5); // 体験用に5問に調整
+
+      showScreen('quiz');
+      loadQuestion();
+    }
+
+    // --- 問題の読み込み ---
+    function loadQuestion() {
+      // ヒントを閉じる
+      document.getElementById('quizHintContainer').classList.add('hidden');
+      document.getElementById('feedbackPanel').classList.add('hidden');
+
+      const qIndex = state.currentQuestionIndex;
+      const currentQ = state.quizQuestions[qIndex];
+
+      // 進捗テキスト & バー
+      const totalQ = state.quizQuestions.length;
+      document.getElementById('quizProgressText').innerText = `問題 ${qIndex + 1} / ${totalQ}`;
+      document.getElementById('quizProgressBar').style.width = `${((qIndex + 1) / totalQ) * 100}%`;
+
+      // タイプバッジ
+      const typeLabels = { reading: '📖 よみかた', similar: '🔍 にた漢字', fill: '📝 あてはまる漢字', okurigana: '✍️ 送り仮名', bushu: '🏛️ 部首' };
+      document.getElementById('quizTypeBadge').innerText = typeLabels[currentQ.type] || '漢字';
+
+      // 質問文
+      document.getElementById('quizQuestion').innerHTML = currentQ.question;
+
+      // ヒント文
+      document.getElementById('quizHintText').innerText = currentQ.hint || 'がんばって考えてみよう！';
+
+      // 選択肢構築（ぷっくり丸み＆適度に整理されたお洒落なボタン）
+      const container = document.getElementById('choicesContainer');
+      container.innerHTML = '';
+
+      const letters = ['A', 'B', 'C', 'D'];
+      currentQ.choices.forEach((choice, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `btn-3d btn-3d-white w-full rounded-2xl py-3.5 px-5 text-left transition-all flex items-center shadow-sm`;
+        btn.onclick = () => selectAnswer(idx);
+        btn.innerHTML = `
+          <span class="w-7 h-7 bg-indigo-50 text-indigo-600 font-black text-xs rounded-full flex items-center justify-center mr-4 border border-indigo-100">${letters[idx]}</span>
+          <span class="text-xl font-bold text-slate-700">${choice}</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    // --- ヒントのトグル ---
+    function toggleHint() {
+      const container = document.getElementById('quizHintContainer');
+      container.classList.toggle('hidden');
+    }
+
+    // --- 回答選択時の処理 ---
+    function selectAnswer(selectedIndex) {
+      const currentQ = state.quizQuestions[state.currentQuestionIndex];
+      const isCorrect = selectedIndex === currentQ.answer;
+
+      // すでに回答済みならスキップ
+      if (!document.getElementById('feedbackPanel').classList.contains('hidden')) return;
+
+      // 選択肢ボタンを一時的に無効化
+      const buttons = document.querySelectorAll('#choicesContainer button');
+      buttons.forEach((btn, idx) => {
+        btn.removeAttribute('onclick');
+        if (idx === currentQ.answer) {
+          // 正解ボタンは優しい緑色に
+          btn.className = `w-full rounded-2xl py-3.5 px-5 text-left flex items-center bg-emerald-50 border-2 border-emerald-300 text-emerald-800 shadow-sm transition-all pop-in`;
+        } else if (idx === selectedIndex) {
+          // 間違えた選択は優しい赤色に
+          btn.className = `w-full rounded-2xl py-3.5 px-5 text-left flex items-center bg-rose-50 border-2 border-rose-300 text-rose-800 shadow-sm transition-all`;
+        } else {
+          btn.style.opacity = '0.5';
+        }
+      });
+
+      // フィードバックパネルの設定
+      const panel = document.getElementById('feedbackPanel');
+      const title = document.getElementById('feedbackTitle');
+      const icon = document.getElementById('feedbackIcon');
+      const text = document.getElementById('feedbackText');
+      const coinEarned = document.getElementById('feedbackCoins');
+
+      if (isCorrect) {
+        state.correctCount++;
+        state.coins += 10;
+        updateCoinDisplay();
+        title.innerText = '正解！すごい！';
+        title.className = 'text-lg font-black text-emerald-600';
+        icon.innerText = '🎉';
+        coinEarned.innerText = '+10 🪙';
+        coinEarned.className = 'ml-auto text-amber-500 font-black text-sm bg-amber-50 px-3 py-1 rounded-full';
+      } else {
+        title.innerText = 'おしかった！';
+        title.className = 'text-lg font-black text-slate-500';
+        icon.innerText = '💡';
+        coinEarned.innerText = '+0 🪙';
+        coinEarned.className = 'ml-auto text-slate-400 font-bold text-sm bg-slate-50 px-3 py-1 rounded-full';
+      }
+
+      text.innerHTML = currentQ.explanation;
+      panel.classList.remove('hidden');
+    }
+
+    // --- 次の問題へ ---
+    function nextQuestion() {
+      state.currentQuestionIndex++;
+      if (state.currentQuestionIndex < state.quizQuestions.length) {
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    // --- クイズ終了 & 結果の処理 ---
+    function finishQuiz() {
+      showScreen('result');
+
+      const totalQ = state.quizQuestions.length;
+      document.getElementById('resultScore').innerText = state.correctCount;
+      document.getElementById('resultPercentage').innerText = `正答率 ${Math.round((state.correctCount / totalQ) * 100)}%`;
+
+      const gainedCoins = state.correctCount * 10;
+      document.getElementById('resultCoinsText').innerText = `合計 +${gainedCoins} コイン ゲット！`;
+
+      // 星の表示数制御
+      const starsContainer = document.getElementById('starsContainer');
+      starsContainer.innerHTML = '';
+      let stars = '';
+      const ratio = state.correctCount / totalQ;
+      if (ratio === 1) {
+        stars = '<span class="text-5xl pop-in">⭐</span><span class="text-6xl -translate-y-2 pop-in" style="animation-delay: 0.1s;">⭐</span><span class="text-5xl pop-in" style="animation-delay: 0.2s;">⭐</span>';
+      } else if (ratio >= 0.6) {
+        stars = '<span class="text-5xl pop-in">⭐</span><span class="text-6xl -translate-y-2 pop-in" style="animation-delay: 0.1s;">⭐</span><span class="text-5xl opacity-30">⭐</span>';
+      } else {
+        stars = '<span class="text-5xl pop-in">⭐</span><span class="text-6xl -translate-y-2 opacity-30">⭐</span><span class="text-5xl opacity-30">⭐</span>';
+      }
+      starsContainer.innerHTML = stars;
+
+      // アドバイスメッセージの決定
+      let advice = '';
+      if (ratio === 1) {
+        advice = 'かんぺき！素晴らしいよ！すべての問題に大正解だね。この調子で、漢字マスターを目指してどんどん進んでいこう！🐥';
+      } else if (ratio >= 0.8) {
+        advice = 'すごい！あと少しで満点だったね。間違えたところもしっかり見直しておけば、次は絶対に満点をとれるよ。ルビ先生も応援しているよ！🐥';
+      } else if (ratio >= 0.5) {
+        advice = 'ナイスチャレンジ！半分以上正解できたね。苦手な「部首」や「送り仮名」をもう一度ゆっくり復習してみると、もっと点数がのびるよ！🐥';
+      } else {
+        advice = 'がんばったね！間違えた問題は、新しく覚える大チャンスだよ。焦らずに、1つずつ「ルビ先生」と一緒に覚えていこうね！🐥';
+      }
+      document.getElementById('resultAdvice').innerText = advice;
+    }
+
+    // --- 背景テーマの設定・反映 ---
+    function applyTheme(themeId) {
+      const frame = document.getElementById('mainFrame');
+      
+      // 全テーマのクラスを一旦削除
+      Object.keys(themes).forEach(t => {
+        frame.classList.remove(themes[t].class);
+      });
+
+      // 新しいテーマを追加
+      frame.classList.add(themes[themeId].class);
+      state.activeTheme = themeId;
+
+      // プレビューの更新
+      const preview = document.getElementById('currentThemePreview');
+      preview.innerText = `${themes[themeId].emoji} ${themes[themeId].name}`;
+      preview.style.background = themes[themeId].price === 0 ? '' : getThemeGradient(themeId);
+
+      // ボタン等の再描画
+      renderShop();
+    }
+
+    // テーマ別のグラデーション（プレビュー用）
+    function getThemeGradient(themeId) {
+      const gradients = {
+        beach: 'linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%)',
+        forest: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+        mountain: 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)',
+        space: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
+        castle: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)'
+      };
+      return gradients[themeId] || '';
+    }
+
+    // --- ショップのレンダリング ---
+    function renderShop() {
+      const container = document.getElementById('shopItemsContainer');
+      container.innerHTML = '';
+
+      Object.keys(themes).forEach(themeId => {
+        if (themeId === 'default') return; // デフォルトは除く
+        
+        const theme = themes[themeId];
+        const isOwned = state.ownedThemes.includes(themeId);
+        const isActive = state.activeTheme === themeId;
+        const canBuy = state.coins >= theme.price;
+
+        const card = document.createElement('div');
+        card.className = `bg-white border-2 rounded-[24px] overflow-hidden shadow-sm transition-all flex flex-col justify-between ${isActive ? 'border-indigo-500' : 'border-slate-100'}`;
+
+        // プレビューグラデーション
+        const gradStyle = getThemeGradient(themeId);
+
+        let actionArea = '';
+        if (isActive) {
+          actionArea = `<span class="text-indigo-600 text-xs font-black bg-indigo-50 px-2.5 py-1 rounded-full">✓ つかい中</span>`;
+        } else if (isOwned) {
+          actionArea = `<button onclick="applyTheme('${themeId}')" class="bg-slate-100 text-slate-700 font-bold text-xs px-3.5 py-1.5 rounded-full hover:bg-slate-200 active:scale-95 transition-all">つかう</button>`;
+        } else {
+          actionArea = `
+            <div class="flex flex-col items-end gap-1">
+              <span class="text-amber-600 font-extrabold text-xs">🪙 ${theme.price}</span>
+              <button onclick="buyTheme('${themeId}', ${theme.price})" class="text-white font-bold text-xs px-3.5 py-1.5 rounded-full ${canBuy ? 'bg-indigo-600 hover:bg-indigo-700 active:scale-95' : 'bg-slate-300 cursor-not-allowed'} transition-all">買う</button>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="h-16 flex items-center justify-center text-3.5xl" style="background: ${gradStyle};">
+            <span class="text-3xl">${theme.emoji}</span>
+          </div>
+          <div class="p-3">
+            <div class="font-extrabold text-slate-700 text-xs">${theme.name}</div>
+            <div class="flex justify-between items-center mt-2.5">
+              ${actionArea}
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // --- 背景テーマの購入 ---
+    function buyTheme(themeId, price) {
+      if (state.coins < price) {
+        alert("コインがたりないよ！クイズに答えてあつめよう！");
+        return;
+      }
+      if (state.ownedThemes.includes(themeId)) return;
+
+      state.coins -= price;
+      state.ownedThemes.push(themeId);
+      updateCoinDisplay();
+      applyTheme(themeId);
+    }
+
+    // --- 初期ロード処理 ---
+    window.onload = function() {
+      updateCoinDisplay();
+      showScreen('home');
+    };
+  </script>
+</body>
+</html>
