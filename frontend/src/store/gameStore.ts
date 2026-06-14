@@ -32,7 +32,7 @@ interface GameStore {
 }
 
 const COIN_PER_CORRECT = 10
-const COIN_PER_WRONG = 5
+const COIN_PER_WRONG = 20
 const QUIZ_LENGTH = 20
 
 export const useGameStore = create<GameStore>()(
