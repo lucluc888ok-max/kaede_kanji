@@ -32,6 +32,7 @@ interface GameStore {
 }
 
 const COIN_PER_CORRECT = 10
+const COIN_PER_WRONG = 5
 const QUIZ_LENGTH = 20
 
 export const useGameStore = create<GameStore>()(
@@ -72,7 +73,7 @@ export const useGameStore = create<GameStore>()(
           total: td[q.type].total + 1,
         }
         set((s) => ({
-          coins: s.coins + coinsEarned,
+          coins: Math.max(0, s.coins + coinsEarned),
           quiz: quiz
             ? {
                 ...quiz,
@@ -139,3 +140,4 @@ export const useGameStore = create<GameStore>()(
 )
 
 export const COIN_PER_CORRECT_EXPORT = COIN_PER_CORRECT
+export const COIN_PER_WRONG_EXPORT = COIN_PER_WRONG

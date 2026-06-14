@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useGameStore } from '../store/gameStore'
+import { useGameStore, COIN_PER_WRONG_EXPORT as COIN_PER_WRONG } from '../store/gameStore'
 import type { QuestionType } from '../types'
 
 const TYPE_LABELS: Record<QuestionType, string> = {
@@ -12,6 +12,7 @@ const TYPE_LABELS: Record<QuestionType, string> = {
 }
 const LETTERS = ['A', 'B', 'C', 'D']
 const COIN_PER_CORRECT = 10
+
 
 export default function Quiz() {
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ export default function Quiz() {
     if (isDone) return
     setSelected(idx)
     setShowFeedback(true)
-    answerQuestion(idx === q.answer, idx === q.answer ? COIN_PER_CORRECT : 0)
+    answerQuestion(idx === q.answer, idx === q.answer ? COIN_PER_CORRECT : -COIN_PER_WRONG)
   }
 
   const handleNext = () => {
@@ -123,8 +124,8 @@ export default function Quiz() {
             <h4 className={`text-lg font-black ${isCorrect ? 'text-emerald-600' : 'text-slate-500'}`}>
               {isCorrect ? '正解！すごい！' : 'おしかった！'}
             </h4>
-            <span className={`ml-auto font-black text-sm px-3 py-1 rounded-full ${isCorrect ? 'text-amber-500 bg-amber-50' : 'text-slate-400 bg-slate-50'}`}>
-              {isCorrect ? `+${COIN_PER_CORRECT} 🪙` : '+0 🪙'}
+            <span className={`ml-auto font-black text-sm px-3 py-1 rounded-full ${isCorrect ? 'text-amber-500 bg-amber-50' : 'text-red-400 bg-red-50'}`}>
+              {isCorrect ? `+${COIN_PER_CORRECT} 🪙` : `-${COIN_PER_WRONG} 🪙`}
             </span>
           </div>
           <p className="text-slate-600 text-sm leading-relaxed mb-4">{q.explanation}</p>
