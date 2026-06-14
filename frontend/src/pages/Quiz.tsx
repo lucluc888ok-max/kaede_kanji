@@ -9,10 +9,15 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   okurigana: '✍️ 送り仮名',
   similar: '🔍 にた漢字',
   bushu: '🏛️ 部首',
+  douon: '🔤 同じよみの漢字',
+  context: '📜 文の中の漢字',
+  compound: '🔗 熟語完成',
+  antonym: '↔️ 反対の意味',
+  ondoku: '🔊 音読み・訓読み',
 }
 const LETTERS = ['A', 'B', 'C', 'D']
 const COIN_PER_CORRECT = 10
-
+const TIMER_SECONDS = 15
 
 export default function Quiz() {
   const navigate = useNavigate()
@@ -21,19 +26,43 @@ export default function Quiz() {
   const [selected, setSelected] = useState<number | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS)
 
   useEffect(() => {
     if (!quiz) navigate('/')
   }, [quiz, navigate])
 
+  const currentIndex = quiz?.currentIndex ?? 0
+
+  // タイマーリセット（問題が変わるたび）
+  useEffect(() => {
+    setTimeLeft(TIMER_SECONDS)
+  }, [currentIndex])
+
+  // カウントダウン
+  useEffect(() => {
+    if (!quiz) return
+    if (selected !== null) return // 回答済みは止める
+    if (timeLeft <= 0) {
+      // 時間切れ：強制的に不正解
+      setSelected(-1)
+      setShowFeedback(true)
+      answerQuestion(false, -COIN_PER_WRONG)
+      return
+    }
+    const id = setTimeout(() => setTimeLeft((t) => t - 1), 1000)
+    return () => clearTimeout(id)
+  }, [timeLeft, selected, quiz, answerQuestion])
+
   if (!quiz) return null
 
-  const { questions, currentIndex } = quiz
+  const { questions } = quiz
   const q = questions[currentIndex]
   const total = questions.length
   const progress = ((currentIndex + 1) / total) * 100
   const isCorrect = selected === q.answer
   const isDone = selected !== null
+  const isTimeout = selected === -1
 
   const handleSelect = (idx: number) => {
     if (isDone) return
@@ -46,6 +75,7 @@ export default function Quiz() {
     setSelected(null)
     setShowHint(false)
     setShowFeedback(false)
+    setTimeLeft(TIMER_SECONDS)
     if (currentIndex + 1 >= total) {
       finishQuiz()
       navigate('/result')
@@ -53,6 +83,9 @@ export default function Quiz() {
       nextQuestion()
     }
   }
+
+  const timerPct = (timeLeft / TIMER_SECONDS) * 100
+  const timerColor = timeLeft > 8 ? 'bg-emerald-400' : timeLeft > 4 ? 'bg-amber-400' : 'bg-red-400'
 
   return (
     <div className="flex-1 flex flex-col justify-between px-6 pb-6 overflow-y-auto bg-white/50">
@@ -64,6 +97,16 @@ export default function Quiz() {
         </div>
         <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
           <div className="bg-indigo-500 h-full rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+        </div>
+        {/* タイマーバー */}
+        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden mt-1.5">
+          <div
+            className={`h-full rounded-full transition-all duration-1000 ${timerColor}`}
+            style={{ width: `${isDone ? 0 : timerPct}%` }}
+          />
+        </div>
+        <div className="text-right text-xs font-bold mt-0.5" style={{ color: timeLeft <= 4 ? '#f87171' : '#94a3b8' }}>
+          {isDone ? '' : `⏱ ${timeLeft}秒`}
         </div>
       </div>
 
@@ -120,9 +163,9 @@ export default function Quiz() {
       {showFeedback && (
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t-4 border-slate-100 rounded-t-[36px] shadow-2xl z-20 slide-up" style={{ maxWidth: 412, margin: '0 auto' }}>
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-3xl">{isCorrect ? '🎉' : '💡'}</span>
+            <span className="text-3xl">{isCorrect ? '🎉' : isTimeout ? '⏰' : '💡'}</span>
             <h4 className={`text-lg font-black ${isCorrect ? 'text-emerald-600' : 'text-slate-500'}`}>
-              {isCorrect ? '正解！すごい！' : 'おしかった！'}
+              {isCorrect ? '正解！すごい！' : isTimeout ? '時間切れ！' : 'おしかった！'}
             </h4>
             <span className={`ml-auto font-black text-sm px-3 py-1 rounded-full ${isCorrect ? 'text-amber-500 bg-amber-50' : 'text-red-400 bg-red-50'}`}>
               {isCorrect ? `+${COIN_PER_CORRECT} 🪙` : `-${COIN_PER_WRONG} 🪙`}

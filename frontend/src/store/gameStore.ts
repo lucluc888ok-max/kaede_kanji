@@ -58,6 +58,11 @@ export const useGameStore = create<GameStore>()(
               okurigana: { correct: 0, total: 0 },
               similar: { correct: 0, total: 0 },
               bushu: { correct: 0, total: 0 },
+              douon: { correct: 0, total: 0 },
+              context: { correct: 0, total: 0 },
+              compound: { correct: 0, total: 0 },
+              antonym: { correct: 0, total: 0 },
+              ondoku: { correct: 0, total: 0 },
             },
           },
         })

@@ -1,4 +1,4 @@
-export type QuestionType = 'reading' | 'fill' | 'okurigana' | 'similar' | 'bushu'
+export type QuestionType = 'reading' | 'fill' | 'okurigana' | 'similar' | 'bushu' | 'douon' | 'context' | 'compound' | 'antonym' | 'ondoku'
 
 export interface Question {
   id: string
