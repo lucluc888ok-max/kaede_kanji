@@ -11,6 +11,11 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   okurigana: '✍️ 送り仮名',
   similar: '🔍 にた漢字',
   bushu: '🏛️ 部首',
+  douon: '🔤 同じよみの漢字',
+  context: '📜 文の中の漢字',
+  compound: '🔗 熟語完成',
+  antonym: '↔️ 反対の意味',
+  ondoku: '🔊 音読み・訓読み',
 }
 
 export default function Result() {
