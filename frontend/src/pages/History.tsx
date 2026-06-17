@@ -8,6 +8,11 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   okurigana: '✍️ 送り仮名',
   similar: '🔍 にた漢字',
   bushu: '🏛️ 部首',
+  douon: '🔤 同じよみの漢字',
+  context: '📜 文の中の漢字',
+  compound: '🔗 熟語完成',
+  antonym: '↔️ 反対の意味',
+  ondoku: '🔊 音読み・訓読み',
 }
 
 export default function History() {
@@ -25,6 +30,11 @@ export default function History() {
     okurigana: { correct: 0, total: 0 },
     similar: { correct: 0, total: 0 },
     bushu: { correct: 0, total: 0 },
+    douon: { correct: 0, total: 0 },
+    context: { correct: 0, total: 0 },
+    compound: { correct: 0, total: 0 },
+    antonym: { correct: 0, total: 0 },
+    ondoku: { correct: 0, total: 0 },
   }
   for (const s of sessions) {
     for (const [type, v] of Object.entries(s.typeBreakdown) as [QuestionType, { correct: number; total: number }][]) {
